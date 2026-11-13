@@ -139,7 +139,7 @@ class Engine:
         return {'audio': audio, 'text': text, 'mos': mos, 'transcription': transcription,
                 'timeline': timeline, 'warnings': warnings,
                 'elapsed_seconds': round(time.monotonic()-started, 2),
-                'provenance': {'source_sha256': row['sha256'], 'analysis_version': '1.3.0',
+                'provenance': {'source_sha256': row['sha256'], 'analysis_version': '1.3.1',
                                'asr': {k:v for k,v in transcription.items() if k not in ('text','segments','words')},
                                'dnsmos_commit': model_manifest['commit'],
                                'dnsmos_sha256': model_manifest['files']['sig_bak_ovr.onnx']['sha256'],

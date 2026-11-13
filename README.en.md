@@ -9,7 +9,7 @@ verified reference text when needed and get quality predictions, level
 measurements, word/group timestamps and exportable comparison reports.
 No hosted speech API or API key is required.
 
-**Version 1.3.0. macOS is the primary tested environment.** Python/FFmpeg-based
+**Version 1.3.1. macOS is the primary tested environment.** Python/FFmpeg-based
 backend code can run elsewhere, but this release does not claim complete Linux
 or Windows desktop validation. The included double-click launcher targets macOS.
 
@@ -17,7 +17,8 @@ or Windows desktop validation. The included double-click launcher targets macOS.
 
 - Integrated Vibe Recorder and browser recording library on the default `#record` tab.
 - Same-page `Blob` handoff from the current take or up to 20 selected library takes to `#compare`.
-- Default microphone input without a pinned device ID; reconnect after changing the system input.
+- Microphone selector with a default-input option, device-list refresh and actual input labels.
+- Exact-device capture when a specific microphone is chosen; switching is locked during capture and saving.
 - Verified library saves with an independent read after the IndexedDB write commits.
 - Navigation guards while recording, saving or retaining an unsaved only copy.
 - Batch import up to 20 recordings, with device/scenario labels and repeated trials.
@@ -81,9 +82,11 @@ The default workspace is **Recording and library** (`#record`). **Capture analys
 and comparison** (`#compare`) is another tab on the same page; existing report
 links continue to use `#test=JOB_ID`.
 
-1. Select the default input in the operating system, grant microphone permission
-   and check the input shown in the page. No previous microphone device ID is
-   pinned. Reconnect when the system default input changes.
+1. Grant microphone permission, then choose an input from the recording-device
+   list (录音设备). Keep the browser-default option (浏览器默认) or select a
+   particular microphone; choosing an entry immediately attempts to connect it.
+   Complete device names are usually available only after permission is granted.
+   Use Refresh devices (刷新设备) after connecting a new device, then select it.
 2. Record and stop. The WAV is written to the browser library; saving is only
    reported after the transaction commits and an independent read verifies the
    stored take and WAV header.
@@ -94,6 +97,18 @@ links continue to use `#test=JOB_ID`.
 4. Send the current take or selected historical takes to analysis. Local `Blob`
    objects are passed within the same page, without a download-and-reimport step.
    The library originals are preserved; selection is limited to 20 takes.
+
+For a specific microphone, the tool requests a new stream with that exact device
+ID and releases the old connection. Device selection is kept only in page memory.
+Check the track name displayed as the actual recording input; the enumerated list
+or a dropdown choice alone is not proof of a successful switch. Unavailable
+devices, denied permission and connection failures are reported for correction
+and reconnection, without silently falling back to another microphone. When
+using browser-default input, reconnect after changing the system or browser
+default. Device selection and refresh are disabled while connecting, recording,
+or stopping and saving, to prevent switching through this page during a take.
+Refreshing the device list does not replace existing library recordings or an
+unsaved WAV.
 
 Recording supports at most **30 minutes** per take, but analysis accepts only
 **10 minutes and 100 MB per recording**, up to 20 recordings and 500 MB per batch.
@@ -183,6 +198,7 @@ reports are included in this repository.
 node --check app/static/app.js
 node tests/recorder/integration.mjs
 node tests/recorder/pcm.mjs
+node tests/recorder/devices.mjs
 ```
 
 Tests generate their own audio fixtures and do not require downloading Whisper

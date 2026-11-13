@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.3.1 — 2026-11-13
+
+### Fixed
+
+- Replace the default-only microphone workflow with a visible input selector and
+  device-list refresh, so users can switch microphones after the first permission grant.
+- Request the exact device ID for a specific selection, release the previous
+  stream, and show the connected track's actual input label.
+- Disable switching while connecting, recording, stopping or saving; report
+  unavailable devices and connection failures without presenting a selection as
+  a successful connection. Device refresh retains existing recordings and unsaved WAV data.
+
+### Unchanged boundaries
+
+- Origin/profile isolation, local storage and the 8771/8767 single-process setup
+  remain as documented for 1.3.0. No recording migration is introduced.
+- macOS remains the primary tested desktop environment. Simulated device tests
+  do not establish physical microphone switching or hardware reliability.
+
 ## 1.3.0 — 2026-11-13
 
 ### Added

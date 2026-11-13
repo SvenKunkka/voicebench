@@ -134,7 +134,7 @@ def test_one_server_and_startup_serve_both_sockets(tmp_path):
 def health(ports=serve.DEFAULT_PORTS, instance='same-process', pid=123):
     info = serve.server_info(ports)
     info.update(instance_id=instance, pid=pid, status='ready')
-    return {'app_id': 'voicebench', 'name': '收音对比台', 'version': '1.3.0',
+    return {'app_id': 'voicebench', 'name': '收音对比台', 'version': '1.3.1',
             'instance_id': instance, 'pid': pid, 'server': info}
 
 

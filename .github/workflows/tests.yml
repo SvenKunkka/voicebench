@@ -38,3 +38,4 @@ jobs:
         run: |
           node tests/recorder/integration.mjs
           node tests/recorder/pcm.mjs
+          node tests/recorder/devices.mjs

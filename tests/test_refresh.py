@@ -76,8 +76,8 @@ def test_refresh_unknown_job_returns_404(refresh_context):
 def test_refresh_api_reports_new_method_version(refresh_context):
     response = refresh_context.client.get('/api/health')
     assert response.status_code == 200
-    assert response.json()['version'] == '1.3.0'
-    assert response.json()['method']['version'] == '1.3.0'
+    assert response.json()['version'] == '1.3.1'
+    assert response.json()['method']['version'] == '1.3.1'
 
 
 def run_one_worker(monkeypatch, context, analyze):

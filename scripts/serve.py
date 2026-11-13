@@ -16,7 +16,7 @@ if str(ROOT) not in sys.path:
 
 HOST = '127.0.0.1'
 APP_ID = 'voicebench'
-VERSION = '1.3.0'
+VERSION = '1.3.1'
 DEFAULT_PORTS = (8771, 8767)
 STATE_PATH = ROOT/'data/server.json'
 
