@@ -1,0 +1,2 @@
+# Optional local speech recognition. Model weights are prepared separately.
+openai-whisper==20250625

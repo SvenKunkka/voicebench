@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light">
+<title>收音对比台 · VoiceBench</title><link rel="icon" href="data:,"><link rel="stylesheet" href="/static/style.css?v=1.2"><script src="/static/app.js?v=1.2" defer></script>
+</head>
+<body>
+<header class="topbar"><a href="/" class="brand" aria-label="收音对比台首页"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 13v6m6-12v18m6-23v28m6-23v18m6-12v6"/></svg><span>收音对比台<small>VoiceBench</small></span></a><div class="top-actions"><span class="engine-state" id="engine-state">检查分析能力…</span><button class="quiet" id="method-button">评分方法</button></div></header>
+<div class="workspace">
+<aside class="sidebar" aria-label="测试记录"><button id="new-test" class="button primary full">＋ 新建对比</button><div class="sidebar-label">最近的测试</div><nav id="history"></nav><div class="sidebar-footer"><span class="privacy-icon" aria-hidden="true">⌂</span><strong>文件留在本机</strong><p>本地识别与分析，无需上传录音或填写 API Key。</p><a href="#" id="help-method">了解评分依据</a></div></aside>
+<main id="main">
+<section id="setup-view">
+<div class="page-heading"><div><h1>比较收音，听见差异。</h1><p>导入设备录音，量化人声、背景噪声和内容识别表现。</p></div><span class="version-tag">本地工作台</span></div>
+<form id="test-form">
+<div class="setup-layout">
+<div class="recording-workspace">
+<section class="panel files-panel"><div class="section-heading"><div><h2>对比录音 <span class="count-badge" id="file-count">0</span></h2><p>添加不同设备，或同一设备的多个版本。</p></div><button type="button" class="button compact" id="add-audio">添加录音</button></div>
+<div id="drop-zone" class="drop-zone" role="button" tabindex="0" aria-label="选择或拖入设备录音"><div class="upload-symbol"><svg viewBox="0 0 48 48" aria-hidden="true"><path d="M7 20v8m7-17v26m10-32v38m10-32v26m7-17v8"/></svg></div><strong>将录音拖到这里</strong><span>或点击选择文件，支持一次添加多份</span><small>WAV、MP3、M4A、FLAC 等 · 每份最多 10 分钟 / 100 MB</small></div>
+<input type="file" id="audio-files" multiple accept="audio/*,.wav,.mp3,.m4a,.flac,.ogg,.aac,.aiff,.aif,.opus,.webm" hidden>
+<div id="recording-list"></div><div id="empty-guidance" class="empty-guidance"><div><span>音质比较</span><p>没有原稿也能比较人声、噪声、音量与失真。</p></div><div><span>内容检查</span><p>添加原稿后，再检查漏字、错字和关键信息。</p></div></div>
+</section>
+<details class="panel reference-panel" id="reference-panel"><summary><div><h2>原稿与关键词 <span class="optional">可选</span></h2><p>需要检查内容是否准确时填写；不同文案可逐份指定。</p></div><span class="disclosure" aria-hidden="true">＋</span></summary><div class="panel-content"><div class="reference-heading"><label for="reference">共用原稿</label><label class="file-link">导入 TXT<input type="file" accept=".txt,text/plain" id="reference-file"></label></div><textarea id="reference" rows="4" maxlength="20000" placeholder="粘贴实际朗读的原文。没有正确原稿时留空，不会影响音质分析。"></textarea><label class="keyword-field">重点核对的词句<input id="keywords" placeholder="例如：十五，五十，G6 HE，不可以（用逗号分隔）"></label><p class="hint">语音识别先独立转写，再与原稿比较；原稿不会用于提示识别模型。</p></div></details>
+</div>
+<aside class="settings-column"><section class="panel settings-panel"><div class="section-heading"><h2>本次测试</h2></div><label>测试名称<input id="test-title" maxlength="120" placeholder="例如：桌面麦 A / B 对比" value="近距离人声收音对比"></label><div class="settings-pair"><label>语音语言<select id="language"><option value="zh">中文</option><option value="en">英语</option><option value="auto">自动检测</option></select></label><label>分析声道<select id="channel"><option value="first">第一声道</option><option value="second">第二声道</option><option value="mix">声道混合</option></select></label></div><label>条件备注<textarea id="notes" rows="3" placeholder="距离、增益、降噪和固件版本等"></textarea></label><div class="condition-box"><label class="check-label"><input type="checkbox" id="conditions"><span>同组录音的测试条件一致</span></label><p>确认使用相同声源、距离与环境。未确认时仍可分析，但只比较录音。</p></div><button type="submit" class="button primary full start-button" id="start-button">开始分析</button><p class="ready-hint" id="ready-hint">添加录音即可开始，无需先填写原稿。</p><p id="form-error" class="error-message" role="alert" hidden></p></section><section class="test-tips"><h3>让比较更有依据</h3><p>同一文案、同一音量、同一位置，能减少说话内容与环境带来的差异。</p><p>同一设备的重复录音填写相同设备名，结果会显示均值与范围。</p></section></aside>
+</div>
+</form>
+</section>
+<section id="report-view" hidden aria-live="polite"></section>
+</main></div>
+<dialog id="method-dialog"><div class="dialog-heading"><h2>评分方法与使用边界</h2><button class="quiet" id="close-method" aria-label="关闭评分方法">关闭</button></div><div id="method-content"></div></dialog><div id="toast" role="status" hidden></div>
+</body></html>
