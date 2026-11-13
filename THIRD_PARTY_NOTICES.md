@@ -3,6 +3,27 @@
 The root MIT license covers original VoiceBench code and documentation. It does
 not replace third-party licenses. No upstream endorsement is implied.
 
+## Vibe Recorder
+
+- Upstream: <https://github.com/SvenKunkka/vibe-recorder>.
+- Copyright: **Copyright (c) 2026 SvenKunkka**.
+- Pinned source revision: `edf13089a6df745b23613e52d9c6c929114cba41`.
+- License: **MIT**.
+- Retained license and copyright notice:
+  [app/static/recorder/LICENSE](app/static/recorder/LICENSE).
+
+The recorder in `app/static/recorder/` is copied and adapted from that source.
+VoiceBench adaptations provide a mountable recorder module, scoped DOM and CSS,
+same-page callbacks for current or selected library `Blob` objects, integration
+with the analysis workspace, and navigation/state guards. The existing
+`vibe-personal-recordings` IndexedDB name and recording data layout are retained.
+The retained MIT text continues to apply to the upstream material; VoiceBench's
+root license does not remove its copyright notice.
+
+Only source was integrated. User recordings, IndexedDB contents and browser
+profiles are not included in this repository. Serving two ports does not transfer
+browser storage between their separate origins or between profiles.
+
 ## Microsoft DNS-Challenge / DNSMOS P.835
 
 - Upstream: <https://github.com/microsoft/DNS-Challenge>

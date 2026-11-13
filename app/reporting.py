@@ -8,7 +8,7 @@ from collections import defaultdict
 from .text_metrics import normalize
 
 METHOD = {
-    'version': '1.2.0',
+    'version': '1.3.0',
     'text': 'NFKC、简体化、忽略大小写、空格及标点；保留字母与数字。不将十五与15自动视为等价。中文按字，英文也按字符评分。',
     'content_score': '有正确原稿时，内容保真分 = max(0, 100 × (1 − CER))。这是自动转写衍生分，不是人类听懂百分比；CER 可超过 100%。未提供原稿时不计分，不将转写当作原稿。',
     'keywords': '按原稿中关键词每次出现的位置与转写对齐核对；不在原稿中的关键词不计分。',

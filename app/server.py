@@ -1,6 +1,7 @@
 import asyncio
 import hashlib
 import json
+import os
 import queue
 import re
 import threading
@@ -107,7 +108,10 @@ async def local_only(request: Request, call_next):
 
 @app.get('/api/health')
 def health():
-    return {'name': '收音对比台', 'version': '1.2.0', 'capabilities': engine.capabilities(), 'method': METHOD}
+    local_server = getattr(app.state, 'local_server', {})
+    return {'name': '收音对比台', 'app_id': 'voicebench', 'version': '1.3.0',
+            'pid': os.getpid(), 'instance_id': local_server.get('instance_id'),
+            'server': dict(local_server), 'capabilities': engine.capabilities(), 'method': METHOD}
 
 
 @app.get('/api/jobs')

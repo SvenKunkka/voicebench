@@ -28,4 +28,13 @@ jobs:
       - name: Run tests without downloading speech models
         run: python -m pytest tests -q
       - name: Check browser script syntax
-        run: node --check app/static/app.js
+        run: |
+          node --version
+          node --check app/static/app.js
+          for source in app/static/recorder/*.js app/static/recorder/*.mjs; do
+            node --check "$source"
+          done
+      - name: Run recorder integration and PCM tests
+        run: |
+          node tests/recorder/integration.mjs
+          node tests/recorder/pcm.mjs

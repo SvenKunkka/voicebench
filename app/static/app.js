@@ -1,3 +1,4 @@
+import { mountRecorder } from '/static/recorder/recorder.mjs';
 'use strict';
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -7,6 +8,7 @@ const stamp = (s) => `${String(Math.floor(Math.max(0,s)/60)).padStart(2,'0')}:${
 const time = (s) => `${Math.floor(s/60)}:${String(Math.floor(s%60)).padStart(2,'0')}`;
 const statusLabel = {queued:'排队中',running:'分析中',done:'已完成',partial:'部分失败',interrupted:'已中断',pending:'等待分析',failed:'失败'};
 let recordings = [], activeJob = null, pollTimer = null, latestJob = null, health = null;
+let recorderController=null,currentView='record';
 
 async function api(url, options) {
   const response = await fetch(url, options);
@@ -20,6 +22,43 @@ async function api(url, options) {
 function toast(message) { $('toast').textContent=message; $('toast').hidden=false; setTimeout(()=>$('toast').hidden=true,4000); }
 function formError(message) { $('form-error').textContent=message; $('form-error').hidden=!message; }
 
+
+function updateOriginNotice(){const primary=health?.server?.primary_origin;const show=currentView==='record'&&primary&&primary!==location.origin;$('library-origin-note').hidden=!show;if(show)$('library-origin-link').href=primary+'/#record';}
+function switchWorkspace(view,{updateHash=true}={}) {
+  if(view==='compare') {
+    const leave=recorderController?.canLeave();
+    if(leave&&!leave.allowed){toast(leave.reason);return false;}
+    recorderController?.pausePlayback();
+  } else document.querySelectorAll('#analysis-view audio').forEach(audio=>audio.pause());
+  currentView=view;updateOriginNotice();
+  $('recorder-view').hidden=view!=='record';$('analysis-view').hidden=view!=='compare';
+  for(const name of ['record','compare']) {
+    const selected=name===view,tab=$(`${name}-tab`);
+    tab.classList.toggle('active',selected);tab.setAttribute('aria-selected',String(selected));tab.tabIndex=selected?0:-1;
+  }
+  if(updateHash)history.replaceState(null,'',view==='record'?'/#record':activeJob?`/#test=${activeJob}`:'/#compare');
+  return true;
+}
+async function fromLibrary(items) {
+  if(!Array.isArray(items)||!items.length)return;
+  const available=items.filter(item=>!recordings.some(row=>item.id&&row.sourceLibraryId===item.id));
+  if(recordings.length+available.length>20)throw new Error('每批最多 20 份录音，请先移除部分待分析录音。');
+  for(const item of available) {
+    if(!(item.blob instanceof Blob)||!item.blob.size)throw new Error('录音内容为空，请回到录音库检查。');
+    if(item.blob.size>100*1024*1024||item.duration>600)throw new Error(`${item.filename} 超过分析上限（10 分钟 / 100 MB），请先分段。`);
+  }
+  if(!switchWorkspace('compare'))throw new Error('请先停止录音并完成保存。');
+  available.forEach(item=>recordings.push({id:crypto.randomUUID(),file:new File([item.blob],item.filename,{type:'audio/wav',lastModified:item.createdAt||Date.now()}),device:item.device||item.filename.replace(/\.[^.]+$/,''),scene:'近距离人声',reference:'',sourceLibraryId:item.id||null}));
+  clearTimeout(pollTimer);activeJob=null;latestJob=null;
+  $('setup-view').hidden=false;$('report-view').hidden=true;history.replaceState(null,'','/#compare');
+  formError('');renderRecordings();await refreshHistory();
+  $('recording-list').scrollIntoView({block:'nearest',behavior:'auto'});
+  toast(available.length?`已从录音库加入 ${available.length} 段，可填写原稿后开始分析。`:'所选录音已在待分析列表中。');
+}
+$('record-tab').addEventListener('click',()=>switchWorkspace('record'));
+$('compare-tab').addEventListener('click',()=>switchWorkspace('compare'));
+$('home-link').addEventListener('click',e=>{e.preventDefault();switchWorkspace('record');});
+$('choose-library').addEventListener('click',()=>{switchWorkspace('record');$('recorder-view').scrollIntoView({block:'start'});});
 function addFiles(files) {
   formError('');
   for (const file of files) {
@@ -36,6 +75,7 @@ function renderRecordings() {
   <div class="row-fields"><label>设备 / 版本<input data-field="device" value="${esc(r.device)}" maxlength="100" required></label><label>场景<input data-field="scene" value="${esc(r.scene)}" maxlength="200" required></label></div>
   <details ${r.reference?'open':''}><summary>这份录音的专属原稿${r.reference?'（已填写）':'（可选）'}</summary><div class="row-reference-tools"><span>留空时使用共用原稿；均未填写则仅做音质分析。</span><label class="file-link">导入 TXT<input type="file" accept=".txt,text/plain" data-row-reference="${r.id}"></label></div><textarea data-field="reference" rows="3" maxlength="20000" placeholder="这份录音实际朗读的文字">${esc(r.reference)}</textarea></details></article>`).join('');
   $('file-count').textContent=String(recordings.length);
+  $('compare-tab-count').textContent=recordings.length?`${recordings.length} 份录音待分析`:'转写、定位与评分';
   $('empty-guidance').hidden=!!recordings.length;
   $('drop-zone').classList.toggle('has-files',!!recordings.length);
   $('ready-hint').textContent=recordings.length?`${recordings.length} 份录音已就绪 · 没有原稿也可分析`:'添加录音即可开始，无需先填写原稿。';
@@ -71,12 +111,13 @@ $('drop-zone').addEventListener('drop',e=>addFiles(e.dataTransfer.files));
 async function refreshHistory() {
   const jobs=await api('/api/jobs');
   const item=j=>`<button class="history-item ${j.id===activeJob?'active':''}" data-job="${j.id}"><strong>${esc(j.title)}</strong><span>${esc(j.created_at.slice(5,16).replace('T',' '))} · ${j.completed}/${j.count} · ${statusLabel[j.status]}</span></button>`;
-  const selfTests=jobs.filter(j=>/流程验证|故障重试自检/.test(j.title)),userJobs=jobs.filter(j=>!selfTests.includes(j));
+  const selfTests=jobs.filter(j=>/流程验证|故障重试自检|软件自检/.test(j.title)),userJobs=jobs.filter(j=>!selfTests.includes(j));
   $('history').innerHTML=(userJobs.length?userJobs.map(item).join(''):'<p class="empty-state">你的对比报告会保存在这里。</p>')+(selfTests.length?`<details class="self-tests"><summary>软件自检记录 (${selfTests.length})</summary>${selfTests.map(item).join('')}</details>`:'');
 }
 $('history').addEventListener('click',e=>{const b=e.target.closest('[data-job]');if(b)openJob(b.dataset.job);});
 $('new-test').addEventListener('click',()=>{
-  activeJob=null;latestJob=null;clearTimeout(pollTimer);history.replaceState(null,'','/');
+  if(!switchWorkspace('compare',{updateHash:false}))return;
+  activeJob=null;latestJob=null;clearTimeout(pollTimer);history.replaceState(null,'','/#compare');
   $('setup-view').hidden=false;$('report-view').hidden=true;refreshHistory().catch(e=>toast(e.message));
 });
 $('test-form').addEventListener('submit',async e=>{
@@ -96,14 +137,17 @@ $('test-form').addEventListener('submit',async e=>{
   finally{$('start-button').disabled=false;$('start-button').textContent='开始分析';}
 });
 
-async function openJob(id) {
-  clearTimeout(pollTimer);activeJob=id;history.replaceState(null,'',`/#test=${id}`);
+async function openJob(id,{activate=true}={}) {
+  if(!activate&&activeJob!==id)return;
+  if(activate&&!switchWorkspace('compare',{updateHash:false}))return;
+  clearTimeout(pollTimer);activeJob=id;if(currentView==='compare')history.replaceState(null,'',`/#test=${id}`);
   $('setup-view').hidden=true;$('report-view').hidden=false;
   try {
     const job=await api(`/api/jobs/${id}`);
     if(activeJob!==id)return;
     latestJob=job;renderReport(job);await refreshHistory();
-    if(['queued','running'].includes(job.status))pollTimer=setTimeout(()=>openJob(id),2200);
+    if(activeJob!==id)return;
+    if(['queued','running'].includes(job.status))pollTimer=setTimeout(()=>openJob(id,{activate:false}),2200);
   }catch(error){$('report-view').innerHTML=`<div class="error-message">${esc(error.message)}</div>`;}
 }
 function waveSvg(values,id) {
@@ -202,9 +246,13 @@ $('help-method').addEventListener('click',e=>{e.preventDefault();openMethod();})
 $('close-method').addEventListener('click',()=>$('method-dialog').close());
 async function init(){
   try{
-    health=await api('/api/health');const ready=Object.entries(health.capabilities).filter(([k])=>['ffmpeg','ffprobe','asr','dnsmos'].includes(k)).every(([,v])=>v);
+    recorderController=mountRecorder($('recorder-view'),{onCompare:fromLibrary,onStateChange:state=>{$('record-tab-state').textContent=state.recording?'正在录音…':state.saving?'正在保存…':state.unsaved?'有录音待保存':'录制、保存与回听';$('record-tab').classList.toggle('is-recording',state.recording);}});
+    const hash=location.hash;switchWorkspace(hash.startsWith('#test=')||hash==='#compare'?'compare':'record',{updateHash:false});
+    health=await api('/api/health');updateOriginNotice();const ready=Object.entries(health.capabilities).filter(([k])=>['ffmpeg','ffprobe','asr','dnsmos'].includes(k)).every(([,v])=>v);
     $('engine-state').textContent=ready?'本地分析已就绪':'部分分析能力未就绪';$('engine-state').classList.toggle('ready',ready);
     await refreshHistory();const match=location.hash.match(/^#test=([a-f0-9]{32})$/);if(match)await openJob(match[1]);
   }catch(error){$('engine-state').textContent='本地服务连接失败';formError(error.message);}
 }
+window.addEventListener('hashchange',()=>{const match=location.hash.match(/^#test=([a-f0-9]{32})$/);if(match)openJob(match[1]);else switchWorkspace(location.hash==='#compare'?'compare':'record',{updateHash:false});});
+document.querySelector('.workspace-tabs').addEventListener('keydown',e=>{if(['ArrowDown','ArrowUp','ArrowRight','ArrowLeft','Home','End'].includes(e.key)){e.preventDefault();const next=e.key==='Home'?'record':e.key==='End'?'compare':currentView==='record'?'compare':'record';if(switchWorkspace(next))$(`${next}-tab`).focus();}});
 init();
