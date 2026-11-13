@@ -65,3 +65,7 @@ Uvicorn, NumPy, SciPy, ONNX Runtime, RapidFuzz, OpenCC, PyTorch and python-multi
 FFmpeg / ffprobe are external executables; their license depends on the build
 configuration. This repository does not redistribute those executables, Python
 wheels or local virtual environments.
+
+## Browser online edition
+
+The independently deployable browser edition is included under `online/`. Its additional self-hosted Transformers.js, quantized Whisper model, ONNX WASM, OpenCC data and ebur128-WASM attributions and license boundaries are recorded in [online/THIRD_PARTY_NOTICES.md](online/THIRD_PARTY_NOTICES.md). The original local-edition notices above continue to apply to their files.

@@ -1,5 +1,14 @@
 # Changelog
 
+## Online 1.0.0 — 2026-11-13
+
+### Added
+
+- Publish the browser-only edition at [https://voicebench-online.yujianxi0.chatgpt.site](https://voicebench-online.yujianxi0.chatgpt.site) and include its complete standalone source under `online/`.
+- Run quantized Whisper tiny, DNSMOS P.835, loudness, transcript comparison and word/group diagnostics entirely in each visitor's browser, with self-hosted model resources and no speech API key.
+- Include independent browser storage, a single-tab analysis writer lock, HTML/CSV/JSON exports, model hashes and third-party licenses.
+- Add 30 automated browser-edition checks alongside the existing local-edition tests. Local application version remains 1.3.1; online and local ASR scores are not interchangeable.
+
 ## 1.3.1 — 2026-11-13
 
 ### Fixed

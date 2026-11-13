@@ -2,6 +2,12 @@
 
 [中文说明](README.md) · [Changelog](CHANGELOG.md) · [License](LICENSE)
 
+**[Open the online edition — no installation](https://voicebench-online.yujianxi0.chatgpt.site)**
+
+This repository includes both editions. The browser-only application, self-hosted models, bilingual documentation and tests are in [`online/`](online/README.en.md). It can be hosted on static HTTPS hosting and keeps each visitor's audio and results in their own browser. Online ASR uses Whisper tiny q8, while the local edition uses Whisper small; their recognition scores must not be pooled.
+
+The documentation below describes the local edition.
+
 A local browser workspace for recording, storing and comparing speech from
 microphones, devices or firmware variants. Record and replay takes, send them
 directly from the local library to analysis, or import external files. Add
