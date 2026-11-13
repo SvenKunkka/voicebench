@@ -39,3 +39,21 @@ jobs:
           node tests/recorder/integration.mjs
           node tests/recorder/pcm.mjs
           node tests/recorder/devices.mjs
+
+  online:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: '24'
+      - name: Install audio reference tool
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+      - name: Check browser online source and bundled assets
+        run: |
+          node --test online/tests/*.mjs
+          for source in online/dist/*.mjs online/dist/static/*.js online/dist/static/recorder/*.js online/dist/static/recorder/*.mjs; do
+            node --check "$source"
+          done

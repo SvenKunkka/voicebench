@@ -1,0 +1,12 @@
+output/
+.playwright-cli/
+node_modules/
+.DS_Store
+.env
+*.wav
+*.f32
+*.part
+tests/*proof*
+tests/asr-smoke.html
+outputs/
+.openai/
